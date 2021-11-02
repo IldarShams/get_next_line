@@ -1,7 +1,7 @@
 
 #include "get_next_line.h"
 # include <stdio.h>
-# define BUFFER_SIZE  43
+# define BUFFER_SIZE  1
 
 char	*ft_strchr(const char *s, int c, int n)
 {
@@ -59,10 +59,11 @@ size_t	ft_strlcat(char *dst, const char *src, size_t dstsize, size_t n)
 	if (i == dstsize)
 		return (size);
 	j = 0;
-	while (dstsize - 1 > i && src[j] != '\0' && src[j] != '\n' && j < n)
+	while (dstsize - 1 > i && src[j] != '\0' && j < n)
+	{
+		printf("%c\n", src[j]);
 		dst[i++] = src[j++];
-	if (src[j] == '\n')
-		dst[i++] = '\n';
+	}
 	if (dstsize != 0 && dstsize2 <= dstsize)
 		dst[i] = '\0';
 	return (size);
@@ -81,52 +82,21 @@ void	change_res_size(char *buf, size_t *res_size)
 		*res_size += BUFFER_SIZE;
 }
 
-// void	*ft_memmove(void *dst, const void *src, size_t len)
-// {
-// 	char	*dst2;
-// 	char	*src2;
-
-// 	dst2 = (char *)dst;
-// 	src2 = (char *)src;
-// 	if (!dst && !src)
-// 		return (dst);
-// 	if (dst > src)
-// 	{
-// 		while (len > 0)
-// 		{
-// 			len--;
-// 			dst2[len] = src2[len];
-// 		}
-// 	}
-// 	else
-// 	{
-// 		while (len > 0)
-// 		{
-// 			*dst2++ = *src2++;
-// 			len--;
-// 		}
-// 	}
-// 	return (dst);
-// }
-
 void	build_res(char **res, char *buf, size_t *res_size, int i)
 {
 	char	*temp;
 	int		n_place;
 
+	if (ft_strchr(buf, '\n', BUFFER_SIZE) == NULL)
+		n_place = BUFFER_SIZE;
+	else
+		n_place = (ft_strchr(buf, '\n', BUFFER_SIZE) - buf + 1);
 	if (i == 0)
 	{
-		if (ft_strchr(buf, '\n', BUFFER_SIZE) == NULL)
-			n_place = BUFFER_SIZE;
-		else
-			n_place = (ft_strchr(buf, '\n', BUFFER_SIZE) - buf + 1);
 		while (n_place < BUFFER_SIZE)
 			buf[i++] = buf[n_place++];
-		while (i < n_place)
+		while (i < n_place && *buf != '\0')
 			buf[i++] = '\0';
-		change_res_size(buf, res_size);
-		if (*res_size != 0)
-			build_res(res, buf, res_size, 1);
 	}
 	else
 	{
@@ -135,7 +105,7 @@ void	build_res(char **res, char *buf, size_t *res_size, int i)
 		ft_strlcpy(*res, temp, *res_size + 1);
 		if (temp != NULL)
 			free(temp);
-		ft_strlcat(*res, buf, *res_size + 1, BUFFER_SIZE);
+		ft_strlcat(*res, buf, *res_size + 1, n_place);
 	}
 }
 
@@ -155,47 +125,95 @@ void	build_res(char **res, char *buf, size_t *res_size, int i)
 // 	return (temp);
 // }
 
+void	ft_bzero(void *s, size_t n)
+{
+	char	*c;
+
+	c = s;
+	while (n > 0)
+	{
+		*c++ = 0;
+		n--;
+	}
+}
+
+// char	*get_next_line(int fd)
+// {
+// 	static char	buf[BUFFER_SIZE];
+// 	char		*temp;
+// 	char		*res;
+// 	size_t		res_size;
+// 	int			bytes_read;
+
+// 	res = NULL;
+// 	temp = malloc(BUFFER_SIZE + 1);
+// 	res_size = 0;
+// 	build_res(&res, buf, &res_size, 0);
+// 	ft_strlcpy(temp, buf, BUFFER_SIZE + 1);
+// 	printf("-%s-\n\n--%s", buf, temp);
+// 	change_res_size(temp, &res_size);
+// 	if (res_size != 0)
+// 		build_res(&res, temp, &res_size, 1);
+// 	while (ft_strchr(temp, '\n', BUFFER_SIZE) == NULL)
+// 	{
+// 		ft_bzero(buf, BUFFER_SIZE);
+// 		ft_bzero(temp, BUFFER_SIZE);
+// 		bytes_read = read(fd, buf, BUFFER_SIZE);
+// 		ft_strlcpy(temp, buf, BUFFER_SIZE + 1);
+// 		if (bytes_read == 0 || bytes_read == -1)
+// 			break ;
+// 		change_res_size(temp, &res_size);
+// 		build_res(&res, temp, &res_size, 1);
+// 		if (ft_strchr(temp, '\n', BUFFER_SIZE))
+// 			break ;
+// 	}
+// 	return (res);
+// }
+
 char	*get_next_line(int fd)
 {
 	static char	buf[BUFFER_SIZE];
-	char		*temp;
 	char		*res;
 	size_t		res_size;
 	int			bytes_read;
 
 	res = NULL;
 	res_size = 0;
-	temp = malloc(BUFFER_SIZE + 1);
 	build_res(&res, buf, &res_size, 0);
+	change_res_size(buf, &res_size);
+	if (res_size != 0)
+		build_res(&res, buf, &res_size, 1);
 	while (ft_strchr(buf, '\n', BUFFER_SIZE) == NULL)
 	{
+		ft_bzero(buf, BUFFER_SIZE);
 		bytes_read = read(fd, buf, BUFFER_SIZE);
-		ft_strlcpy(temp, buf, BUFFER_SIZE + 1);
 		if (bytes_read == 0 || bytes_read == -1)
 			break ;
-		change_res_size(temp, &res_size);
-		build_res(&res, temp, &res_size, 1);
+		change_res_size(buf, &res_size);
+		build_res(&res, buf, &res_size, 1);
 		if (ft_strchr(buf, '\n', BUFFER_SIZE))
 			break ;
 	}
-	free(temp);
 	return (res);
 }
 
 int	main(int argc, char **argv)
 {
-	int	i;
-	int	fd;
+	int		i;
+	int		fd;
+	char	*s1;
 
 	i = 1;
 	if (i > argc)
 		return (-1);
 	i = 0;
 	fd = open("./t.txt", O_RDONLY);
-	while (i < 1)
+	while (i < 3)
 	{
-		printf("%s", get_next_line(fd));
-		i++;
+		s1 = get_next_line(fd);
+		printf("%d) %s", i, s1);
+		free(s1);
+ 		i++;
 	}
 	close(fd);
 }
