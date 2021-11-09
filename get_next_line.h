@@ -6,7 +6,7 @@
 /*   By: smaegan <smaegan@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/10/26 17:36:20 by smaegan           #+#    #+#             */
-/*   Updated: 2021/11/02 20:07:01 by smaegan          ###   ########.fr       */
+/*   Updated: 2021/11/09 19:41:15 by smaegan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,10 +20,10 @@
 char	*get_next_line(int fd);
 
 //utils
-char	*ft_strchr(const char *s, int c, int n);
+char	*ft_strchr(const char *s, int c);
+void	build_res(char **res, char *buf);
+char	*ft_strjoin(char const *s1, char const *s2);
 size_t	ft_strlcpy(char *dst, const char *src, size_t dstsize);
-size_t	ft_strlcat(char *dst, const char *src, size_t dstsize, size_t n);
-void	build_res(char **res, char *buf, size_t *res_size, int i);
-void	change_res_size(char *buf, size_t *res_size);
+void	make_last(char l[BUFFER_SIZE], char *buf);
 
 #endif

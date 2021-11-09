@@ -1,15 +1,16 @@
+//#include "get_next_line.h"
+# include <stdlib.h>
+# include <unistd.h>
+# include <fcntl.h>
+# define BUFFER_SIZE 42
 
-#include "get_next_line.h"
-# include <stdio.h>
-# define BUFFER_SIZE  1
-
-char	*ft_strchr(const char *s, int c, int n)
+char	*ft_strchr(const char *s, int c)
 {
 	int		i;
 
 	c = c % 128;
 	i = 0;
-	while (s[i] != c && s[i] != '\0' && i < n)
+	while (s[i] != c && s[i] != '\0')
 		i++;
 	if (s[i] == c)
 		return ((char *)&s[i]);
@@ -17,12 +18,57 @@ char	*ft_strchr(const char *s, int c, int n)
 		return ((void *)0);
 }
 
+char	*ft_strjoin(char const *s1, char const *s2)
+{
+	int		size1;
+	int		size2;
+	char	*rets;
+	int		i;
+
+	if (!s1 || !s2)
+		return (NULL);
+	i = 0;
+	size1 = 0;
+	size2 = 0;
+	while (s1[size1] != '\0')
+		size1++;
+	while (s2[size2] != '\0' && *(s2 + size2 - 1) != '\n')
+		size2++;
+	rets = malloc(size1 + size2 + 1);
+	if (rets == NULL)
+		return (NULL);
+	while (*s1 != '\0')
+		rets[i++] = *s1++;
+	while (*s2 != '\0' && *(s2 - 1) != '\n')
+		rets[i++] = *s2++;
+	rets[i] = '\0';
+	return (rets);
+}
+
+void	build_res(char **res, char *buf)
+{
+	char	*temp;
+
+	if (*res == NULL)
+	{
+		*res = malloc(1);
+		*res[0] = '\0';
+	}
+	temp = ft_strjoin(*res, buf);
+	free(*res);
+	if (*temp != '\0')
+		*res = temp;
+	else
+	{
+		free(temp);
+		*res = NULL;
+	}
+}
+
 size_t	ft_strlcpy(char *dst, const char *src, size_t dstsize)
 {
 	size_t	i;
 
-	if (src == NULL || dst == NULL)
-		return (0);
 	i = 0;
 	while (src[i] != '\0')
 		i++;
@@ -40,90 +86,27 @@ size_t	ft_strlcpy(char *dst, const char *src, size_t dstsize)
 	return (i);
 }
 
-size_t	ft_strlcat(char *dst, const char *src, size_t dstsize, size_t n)
+void	make_last(char l[BUFFER_SIZE], char *buf)
 {
-	size_t	i;
-	size_t	j;
-	size_t	size;
-	size_t	dstsize2;
+	int	i;
+	int	j;
 
-	j = 0;
 	i = 0;
-	while (dst[i] != '\0' && i < dstsize)
-		i++;
-	size = i;
-	dstsize2 = i;
-	while (src[j] != '\0')
-		j++;
-	size += j;
-	if (i == dstsize)
-		return (size);
 	j = 0;
-	while (dstsize - 1 > i && src[j] != '\0' && j < n)
+	if (ft_strchr(buf, '\n') == NULL)
 	{
-		printf("%c\n", src[j]);
-		dst[i++] = src[j++];
-	}
-	if (dstsize != 0 && dstsize2 <= dstsize)
-		dst[i] = '\0';
-	return (size);
-}
-
-void	change_res_size(char *buf, size_t *res_size)
-{
-	if (*buf == '\0')
-	{
-		*res_size = 0;
+		while (i < BUFFER_SIZE)
+			l[i++] = '\0';
 		return ;
 	}
-	if (ft_strchr(buf, '\n', BUFFER_SIZE))
-		*res_size += ft_strchr(buf, '\n', BUFFER_SIZE) - buf + 1;
-	else
-		*res_size += BUFFER_SIZE;
+	while (buf[j] != '\n' && buf[j] != '\0' && j < BUFFER_SIZE)
+		j++;
+	j++;
+	while (j < BUFFER_SIZE)
+		l[i++] = buf[j++];
+	while (i < BUFFER_SIZE)
+		l[i++] = '\0';
 }
-
-void	build_res(char **res, char *buf, size_t *res_size, int i)
-{
-	char	*temp;
-	int		n_place;
-
-	if (ft_strchr(buf, '\n', BUFFER_SIZE) == NULL)
-		n_place = BUFFER_SIZE;
-	else
-		n_place = (ft_strchr(buf, '\n', BUFFER_SIZE) - buf + 1);
-	if (i == 0)
-	{
-		while (n_place < BUFFER_SIZE)
-			buf[i++] = buf[n_place++];
-		while (i < n_place && *buf != '\0')
-			buf[i++] = '\0';
-	}
-	else
-	{
-		temp = *res;
-		*res = malloc(*res_size + 1);
-		ft_strlcpy(*res, temp, *res_size + 1);
-		if (temp != NULL)
-			free(temp);
-		ft_strlcat(*res, buf, *res_size + 1, n_place);
-	}
-}
-
-// char	*start(char *buf2)
-// {
-// 	char	*temp;
-// 	int		i;
-
-// 	if (!*buf2)
-// 		return (NULL);
-// 	i = 0;
-// 	while (buf2[i] != '\n' && i < BUFFER_SIZE)
-// 		i++;
-// 	temp = malloc(i);
-// 	ft_strlcpy(temp, buf2, i);
-// 	ft_memmove(buf2, buf2 + i + 1, BUFFER_SIZE - i - 1);
-// 	return (temp);
-// }
 
 void	ft_bzero(void *s, size_t n)
 {
@@ -137,64 +120,34 @@ void	ft_bzero(void *s, size_t n)
 	}
 }
 
-// char	*get_next_line(int fd)
-// {
-// 	static char	buf[BUFFER_SIZE];
-// 	char		*temp;
-// 	char		*res;
-// 	size_t		res_size;
-// 	int			bytes_read;
-
-// 	res = NULL;
-// 	temp = malloc(BUFFER_SIZE + 1);
-// 	res_size = 0;
-// 	build_res(&res, buf, &res_size, 0);
-// 	ft_strlcpy(temp, buf, BUFFER_SIZE + 1);
-// 	printf("-%s-\n\n--%s", buf, temp);
-// 	change_res_size(temp, &res_size);
-// 	if (res_size != 0)
-// 		build_res(&res, temp, &res_size, 1);
-// 	while (ft_strchr(temp, '\n', BUFFER_SIZE) == NULL)
-// 	{
-// 		ft_bzero(buf, BUFFER_SIZE);
-// 		ft_bzero(temp, BUFFER_SIZE);
-// 		bytes_read = read(fd, buf, BUFFER_SIZE);
-// 		ft_strlcpy(temp, buf, BUFFER_SIZE + 1);
-// 		if (bytes_read == 0 || bytes_read == -1)
-// 			break ;
-// 		change_res_size(temp, &res_size);
-// 		build_res(&res, temp, &res_size, 1);
-// 		if (ft_strchr(temp, '\n', BUFFER_SIZE))
-// 			break ;
-// 	}
-// 	return (res);
-// }
-
 char	*get_next_line(int fd)
 {
-	static char	buf[BUFFER_SIZE];
-	char		*res;
-	size_t		res_size;
-	int			bytes_read;
+	static char	last[BUFFER_SIZE];
+	char		*buf;
+	char		*str;
+	size_t		len;
+	int			red;
 
-	res = NULL;
-	res_size = 0;
-	build_res(&res, buf, &res_size, 0);
-	change_res_size(buf, &res_size);
-	if (res_size != 0)
-		build_res(&res, buf, &res_size, 1);
-	while (ft_strchr(buf, '\n', BUFFER_SIZE) == NULL)
+	red = -2;
+	len = 0;
+	str = NULL;
+	buf = malloc(BUFFER_SIZE + 1);
+	if (buf == NULL)
+		return (NULL);
+	ft_strlcpy(buf, last, BUFFER_SIZE);
+	while (ft_strchr(buf, '\n') == NULL)
 	{
-		ft_bzero(buf, BUFFER_SIZE);
-		bytes_read = read(fd, buf, BUFFER_SIZE);
-		if (bytes_read == 0 || bytes_read == -1)
-			break ;
-		change_res_size(buf, &res_size);
-		build_res(&res, buf, &res_size, 1);
-		if (ft_strchr(buf, '\n', BUFFER_SIZE))
+		ft_bzero(buf, BUFFER_SIZE + 1);
+		red = read(fd, buf, BUFFER_SIZE);
+		build_res(&str, buf);
+		if (red <= 0)
 			break ;
 	}
-	return (res);
+	make_last(last, buf);
+	if (red == -2)
+		build_res(&str, buf);
+	free(buf);
+	return (str);
 }
 
 int	main(int argc, char **argv)
@@ -208,7 +161,7 @@ int	main(int argc, char **argv)
 		return (-1);
 	i = 0;
 	fd = open("./t.txt", O_RDONLY);
-	while (i < 3)
+	while (i < 9)
 	{
 		s1 = get_next_line(fd);
 		printf("%d) %s", i, s1);
